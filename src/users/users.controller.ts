@@ -13,6 +13,7 @@ import { UpdateUserDto } from './dto/update-user.dto';
 import { BadRequestException } from '@nestjs/common/exceptions';
 import { Header } from '@nestjs/common';
 import { Query, Redirect } from '@nestjs/common/decorators';
+import { VerifyEmailDto } from './dto/verify-email.dto';
 
 @Controller('users')
 export class UsersController {
@@ -24,7 +25,28 @@ export class UsersController {
     await this.usersService.createUser(name, email, password); // body에서 얻은 정보를 UsersService에 전달함.
   }
 
- /*  @Get()
+
+
+
+/*   @Post('/email-verify')
+  async verifyEmail(@Query() dto: VerifyEmailDto): Promise<string> {
+    const { signupVerifyToken } = dto; // d0ad3b70-47e9-11ee-aeba-b38a07c8617b
+    return await this.usersService.verifyEmail(signupVerifyToken);
+  } */
+
+  /*   @Post('/login')
+  async login(@Body() dto: UserLoginDt): Promise<string> {
+    const { email, password } = dto;
+    return await this.usersService.login(email, password);
+  } */
+  /* 
+  @Get('/:id')
+  async getUserInfo(@Param('id') userId: string): Promise<UserInfo> {
+    return await this.usersService.getUserInfo(userId);
+  } */
+}
+
+/*  @Get()
   findAll() {
     return this.usersService.findAll();
   }
@@ -40,9 +62,7 @@ export class UsersController {
   }
  */
 
-
-  
-  /*  
+/*  
   @Post()
   create(@Body() createUserDto: CreateUserDto) {
     const { name, email } = createUserDto;
@@ -50,7 +70,7 @@ export class UsersController {
   } 
   */
 
-  /*  @Get(':id')
+/*  @Get(':id')
   findOnee(@Param('id') id: string) {
     if (+id < 1) {
       throw new BadRequestException('id는 0보다 큰 값이어야 합니다.');
@@ -58,7 +78,7 @@ export class UsersController {
     return this.usersService.findOne(+id);
   } */
 
-  /*   
+/*   
   @Header('Custom', 'Test Header')
   @Get(':id')
   findOneWithHeader(@Param('id') id: string) {
@@ -66,7 +86,7 @@ export class UsersController {
   }
 */
 
-  /*   
+/*   
   @Redirect('https://nestjs.com', 301)
   @Get(':id')
   findOne(@Param('id') id: string) {
@@ -74,7 +94,7 @@ export class UsersController {
   } // http://localhost:3000/users/1로 접속하면, https://nestjs.com/로 이동함.
  */
 
-  /*  
+/*  
   @Get('redirect/docs')
   @Redirect('https://docs.nestjs.com', 302)
   getDocs(@Query('version') version) {
@@ -83,4 +103,3 @@ export class UsersController {
     }
   } // http://localhost:3000/users/redirect/docs?version=5로 접속하면 https://docs.nestjs.com/v5/로 이동함.
  */
-}
