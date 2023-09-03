@@ -3,6 +3,12 @@
   "collection": "@nestjs/schematics",
   "sourceRoot": "src",
   "compilerOptions": {
-    "deleteOutDir": true
+    "assets": [  
+      {
+        "include": "./config/env/*.env",
+        "outDir": "./dist"
+      }
+    ]
   }
 }
+/* .env파일을 dist디렉터리에 복사할 수 있도록 설정해줌. */

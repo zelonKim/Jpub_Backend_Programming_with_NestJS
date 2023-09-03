@@ -1,7 +1,8 @@
 import Mail = require('nodemailer/lib/mailer');
 import * as nodemailer from 'nodemailer';
-
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
+import emailConfig from 'src/config/emailConfig';
+import { ConfigType } from '@nestjs/config';
 
 interface EmailOptions {
   to: string;
@@ -13,22 +14,26 @@ interface EmailOptions {
 export class EmailService {
   private transporter: Mail;
 
-  constructor() {
+  constructor( 
+    @Inject(emailConfig.KEY) private config: ConfigType<typeof emailConfig>, // @Inject()의 인수로 registerAs함수에 지정한 토큰을 넣어줌.
+    ) {
     this.transporter = nodemailer.createTransport({
-      // createTransport를 통해 트랜스포터 객체를 생성함.
-      service: 'Gmail',
+      service: config.service,
       auth: {
-        user: 'ksz18601@gmail.com',
-        pass: 'prslgfnvrbsmfufc',
+        user: config.auth.user,
+        pass: config.auth.pass,
       },
     });
   }
+
 
   async sendMemberJoinVerification(
     emailAddress: string,
     signupVerifyToken: string,
   ) {
-    const baseUrl = 'http://localhost:3000';
+    const baseUrl = this.config.baseUrl;
+
+
 
     const url = `${baseUrl}/users/email-verify?signupVerifyToken=${signupVerifyToken}`; // 해당 링크를 통해 다시 서비스로 이메일 인증요청이 들어옴.
 
@@ -46,3 +51,5 @@ export class EmailService {
     return await this.transporter.sendMail(mailOptions); // 트랜스포터 객체를 통해 메일을 전송함.
   }
 }
+
+/////////////////
