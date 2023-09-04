@@ -1,5 +1,6 @@
 import { Controller, Get } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config/dist';
+import { Transform } from 'class-transformer';
 
 @Controller()
 export class AppController {
@@ -10,6 +11,4 @@ export class AppController {
     return this.configService.get('DATABASE_HOST');
   }
 }
-
-
 
