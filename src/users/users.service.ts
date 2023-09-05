@@ -2,12 +2,73 @@ import * as uuid from 'uuid';
 import { EmailService } from '../email/email.service';
 import { Injectable, Scope } from '@nestjs/common';
 import { Inject } from '@nestjs/common/decorators';
+import { DataSource } from 'typeorm';
+import { UserEntity } from './entities/user.entity';
+import { ulid } from 'ulid';
 
 @Injectable() 
 export class UsersService {
-  constructor(private emailService: EmailService,
+  constructor(private emailService: EmailService, private dataSource: DataSource,
     @InjectRepository(UserEntity) private usersRepository: Repository<UserEntity>, // @InjectRespository()를 통해 레포지토리를 주입함.
     ) {}
+
+  private async saveUserUsingQueryRunner(name: string, email: string, password: string, signupVerifyToken: string) {
+    const queryRunner = this.dataSource.createQueryRunner(); // QueryRunner를 생성함.
+    await queryRunner.connect(); // QueryRunner를 데이터베이스에 연결함.
+    await queryRunner.startTransaction(); // 트랜잭션을 시작함.
+
+    try {
+      const user = new UserEntity();
+      user.id = ulid();
+      user.name = name;
+      user.email = email;
+      user.password = password;
+      user.signupVerifyToken = signupVerifyToken;
+
+      await queryRunner.manager.save(user); 
+
+      await queryRunner.commitTransaction();  // 트랜잭션을 커밋함.
+    } 
+    catch (e) {
+      await queryRunner.rollbackTransaction(); // 에러가 발생하면 롤백을 수행함.
+    } 
+    finally {
+      await queryRunner.release(); // queryRunner객체를 해제함.
+    }
+  }
+
+///////////////////
+
+  private async saveUserUsingTransaction(name: string, email: string, password: string, signupVerifyToken: string) {
+    await this.dataSource.transaction(async manager => {
+      const user = new UserEntity();
+      user.id = ulid();
+      user.name = name;
+      user.email = email;
+      user.password = password;
+      user.signupVerifyToken = signupVerifyToken;
+      
+      await manager.save(user);
+
+    })
+  }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
   async createUser(name: string, email: string, password: string) {
