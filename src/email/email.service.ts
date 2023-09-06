@@ -33,8 +33,6 @@ export class EmailService {
   ) {
     const baseUrl = this.config.baseUrl;
 
-
-
     const url = `${baseUrl}/users/email-verify?signupVerifyToken=${signupVerifyToken}`; // 해당 링크를 통해 다시 서비스로 이메일 인증요청이 들어옴.
 
     const mailOptions: EmailOptions = {
@@ -51,5 +49,3 @@ export class EmailService {
     return await this.transporter.sendMail(mailOptions); // 트랜스포터 객체를 통해 메일을 전송함.
   }
 }
-
-/////////////////

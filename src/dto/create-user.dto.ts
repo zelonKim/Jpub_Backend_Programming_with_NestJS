@@ -4,10 +4,11 @@ import {
   MaxLength,
   IsEmail,
   Matches,
+  IsString,
 } from 'class-validator';
 
 export class CreateUserDto {
-  @isString()
+  @IsString()
   @MinLength(2)
   @MaxLength(30)
   readonly name: string;

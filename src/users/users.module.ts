@@ -1,12 +1,13 @@
 import { Module } from '@nestjs/common';
-import { UsersService } from './users.service';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { AuthModule } from 'src/auth/auth.module';
+import { EmailModule } from 'src/email/email.module';
+import { UserEntity } from './entities/user.entity';
 import { UsersController } from './users.controller';
-import { EmailModule } from '../email/email.module';
+import { UsersService } from './users.service';
 
 @Module({
-  imports: [
-    TypeOrmModule.forFeature([UserEntity]) // forFeature()메서드로 해당 모듈내에서 사용할 엔티티를 등록함.
-  ],
+  imports: [EmailModule, TypeOrmModule.forFeature([UserEntity]), AuthModule],
   controllers: [UsersController],
   providers: [UsersService],
 })
