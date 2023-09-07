@@ -7,10 +7,19 @@ import { MiddlewareConsumer, NestModule } from '@nestjs/common';
 import { LoggerMiddleware } from './logger.middleware';
 import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
+import { LoggingModule } from './logging/logging.module';
+import { BatchModule } from './Batch/batch.module';
+import { TerminusModule } from '@nestjs/terminus';
+import { HealthCheckController } from './health-check/health-check.controller';
+import { HealthCheckService } from './health-check/health-check.service';
+import { HttpModule } from '@nestjs/axios';
+import { HealthCheckController } from './health-check/health-check.controller';
 
 @Module({
   imports: [
+    TerminusModule,
     UsersModule,
+    HttpModule,
     ConfigModule.forRoot({
       envFilePath: ['${__dirname}/.env'], // 환경변수 파일의 경로를 지정함.
       load: [emailConfig], // 앞에서 구성해둔 ConfigFactory를 지정함.
@@ -31,8 +40,12 @@ import { AuthModule } from './auth/auth.module';
       // migration: [__dirname + '/**/migrations/*.js'] // 마이그레이션을 수행할 파일이 관리되는 경로를 설정함.
       // migrationsTableName: 'migrations' // 마이그레이션 이력이 기록되는 테이블명을 지정함.
     }),
+
+    LoggingModule,
+
+    BatchModule,
   ],
-  controllers: [],
+  controllers: [HealthCheckController],
   providers: [],
 })
 export class AppModule {}
