@@ -14,9 +14,18 @@ import { HealthCheckController } from './health-check/health-check.controller';
 import { HealthCheckService } from './health-check/health-check.service';
 import { HttpModule } from '@nestjs/axios';
 import { HealthCheckController } from './health-check/health-check.controller';
+import { DogHealthIndicator } from './health-check/DogHealthIndicator';
+import { AppService } from './app.service';
+import { LoggerModule } from './logger/logger.module';
+import { WinstonModule } from 'nest-winston';
+
+import * as winston from 'winston'
+import {utilities as nestWindstonModuleUtilities, WinstonModule} from 'nest-winston'
+
 
 @Module({
   imports: [
+    LoggerModule,
     TerminusModule,
     UsersModule,
     HttpModule,
@@ -44,9 +53,24 @@ import { HealthCheckController } from './health-check/health-check.controller';
     LoggingModule,
 
     BatchModule,
+
+    LoggerModule,
+
+    WinstonModule.forRoot({
+      transports: [
+        new winston.transports.Console({ // transprot옵션을 설정함.
+          level: process.env.NODE_ENV === 'production' ? 'info' : 'silly', // 환경에 따라 로그 레벨을 설정함.
+          format: winston.format.combine( 
+            winston.format.timestamp(), // 로그를 남긴 시각을 함께 표시함.
+            nestWindstonModuleUtilities.format.nestLike('MyApp', { prettyPrint: true }), // 로그를 남긴 곳을 구분하며, 로그를 읽기 쉽도록 해줌. 
+          )
+        })
+      ]
+    })
   ],
+
   controllers: [HealthCheckController],
-  providers: [],
+  providers: [DogHealthIndicator, AppService],
 })
 export class AppModule {}
 

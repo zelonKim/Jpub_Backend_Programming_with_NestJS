@@ -15,33 +15,79 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { UserLoginDto } from './dto/user-login.dto';
 import { VerifyEmailDto } from './dto/verify-email.dto';
 import { UserInfo } from './UserInfo';
-import { UsersService } from './users.service';
+import { createUserHandler } from './users.service';
+import { ICommand } from '@nestjs/cqrs';
+import { CommandBus } from '@nestjs/cqrs'
+import { IEvent } from '@nestjs/cqrs';
+import { CqrsEvent } from './cqrs-event'
+import { EventBus } from '@nestjs/cqrs';
+import { QueryBus } from '@nestjs/cqrs/dist/query-bus';
+
+
+
+export class CreateUserCommand implements ICommand {
+  constructor(
+    readonly name: string,
+    readonly email: string,
+    readonly password: string,
+  ){}
+}
+
+
+export class UserCreatedEvent extends CqrsEvent implements IEvent {
+  constructor(
+    readonly email: string,
+    readonly signupVerifyToken: string,
+  ) {
+    super(UserCreatedEvent.name)
+  }
+}
+
+
+export class TestEvent extends CqrsEvent implements IEvent {
+  constructor(
+  ) {
+    super(TestEvent.name)
+  }
+}
+
+
 
 @Controller('users')
 export class UsersController {
-  constructor(
-    private usersService: UsersService,
-    private authService: AuthService,
-  ) {}
+  constructor( private commandBus: CommandBus, // CommandBus를 주입함.
+    private eventBus: EventBus ) {} 
 
   @Post()
-  async createUser(@Body() dto: CreateUserDto): Promise<void> {
+  async creatUser(@Body() dto: CreateUserDto): Promise<void> {
     const { name, email, password } = dto;
-    await this.usersService.createUser(name, email, password);
+    const command = new CreateUserCommand(name, email, password)  
+    return this.commandBus.execute(command) 
   }
+
+    
+
 
   @Post('/email-verify')
   async verifyEmail(@Query() dto: VerifyEmailDto): Promise<string> {
     const { signupVerifyToken } = dto;
-    return await this.usersService.verifyEmail(signupVerifyToken);
+
+    this.eventBus.publish(new UserCreatedEvent(email, signupVerifyToken))
+    this.eventBus.publish(new TestEvent())
   }
+
+
+
+
 
   @Post('/login')
   async login(@Body() dto: UserLoginDto): Promise<string> {
     const { email, password } = dto;
 
     return await this.usersService.login(email, password);
-  }
+  } */
+
+
 
   // @Get(':id')
   // async getUserInfo(@Headers() headers: any, @Param('id') userId: string): Promise<UserInfo> {
@@ -76,7 +122,50 @@ export class UsersController {
 
 
 
+  export class GetUserInfoQuery implements IQuery {
+    constructor(
+      readonly userId: String
+    ) {}
+  }
+
+  @Controller('users')
+  export class UsersController{
+    constructor(
+      private queryBus: QueryBus
+    ) {}
+  
+  
+  @UseGuards(AuthGuard)
+  @Get(':id')
+  async getUserInfo(@Param('id') userId: string): Promise<UserInfo> {
+    const getUserInfoQuery = new GetUserInfoQuery(userId);
+    return this.queryBus.execute(getUserInfoQuery) // 쿼리 핸들러로 쿼리를 실어보냄.
+  }
+  }
 
 
 
 }
+
+import { Logger as WinstonLogger } from 'winston'
+import { WINSTON_MODULE_PROVIDER } from 'nest-winston'
+
+export class UsersController {
+  constructor(
+    @Inject(WINSTON_MODULE_PROVIDER) private reaonly logger: WinstonLogger) {}
+
+    @Post()
+    async createUser(@Body() dto: CreateUserDto): Promise<void> {
+      this.printWinstonLog(dto);
+    }
+
+    private printWinstonLog(dto) {
+      this.logger.error('error', dto)
+      this.logger.warn('warn', dto)
+      this.logger.info('info', dto)
+      this.logger.http('http', dto)
+      this.logger.verbose('verbose', dto)
+      this.logger.debug('debug', dto)
+      this.logger.silly('silly', dto)
+    }
+  }

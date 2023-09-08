@@ -13,9 +13,21 @@ import { UserEntity } from './entities/user.entity';
 import { AuthService } from 'src/auth/auth.service';
 import { EmailService } from 'src/email/email.service';
 
-@Injectable()
-export class UsersService {
-  constructor(
+
+import { CommandHandler, ICommandHandler, EventsHandler, IEventHandler } from '@nestjs/cqrs';
+import { CreateUserCommand, GetUserInfoQuery, TestEvent, UserCreatedEvent } from './users.controller';
+
+
+@Injectable() // @CommandHandler takes command type to be handled by this handler.
+@CommandHandler(CreateUserCommand) // @CommandHandler() marks a class as a Nest command handler.
+export class createUserHandler implements ICommandHandler<CreateUserCommand> { // The decorated class by @CommandHandler must implement the ICommandHandler interface.
+  async execute(command: CreateUserCommand) { // ICommandHandler interface has a 'execute' function
+    const { name, email, password } = command;
+
+
+
+
+    constructor(
     private emailService: EmailService,
     @InjectRepository(UserEntity)
     private usersRepository: Repository<UserEntity>,
@@ -178,4 +190,54 @@ export class UsersService {
   }
 }
 
+}
+
+// @EventsHandler takes one or more event types to be handled by this handler.
+@EventsHandler(UserCreatedEvent, TestEvent) // @EventsHandler marks a class as a Nest event handler.
+export class UserEventsHandler implements IEventHandler<UserCreatedEvent | TestEvent> { // The decorated class by @EventsHandler must implement the IEventHandler interface.
+  constructor( private emailService: EmailService) {}
+
+  async handle(event: UserCreatedEvent | TestEvent) { // IEventHandler has a 'handle' method
+    switch(event.name) {
+      case UserCreatedEvent.name: {
+        console.log('UserCreatedEvent');
+
+        const { email, signupVerifyToken } = event;
+        await this.emailService.sendMemberJoinVerification(email, signupVerifyToken)
+        break;
+      }
+      case TestEvent.name: {
+        console.log('Test Event')
+        break;
+      }
+      default:
+        break;
+    }
+  }
+}
+
+@QueryHandler(GetUserInfoQuery)
+export class GetUserInfoQueryHandler implements IQueryHandler<GetUserInfoQuery> {
+  constructor(
+    @InjectRepository(UserEntity) private usersRepository: Repository<UserEntity>,) {}
+
+  async execute(query: GetUserInfoQuery): Promise<UserInfo> {
+    const { userId } = query;
+
+
+    const user = await this.usersRepository.findOne({
+      where: { id: userId }
+    })
+
+    if(!user) {
+      throw new NotFoundException('User does not exist')
+    }
+
+    return {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+    }
+  }
+}
 
